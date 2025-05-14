@@ -369,6 +369,80 @@ textarea {
 .close-modal:hover {
     color: #e74c3c;
 }
+/* Styles du modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+    overflow-y: auto; /* Permet le scroll */
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh; /* Limite la hauteur */
+    overflow-y: auto; /* Scroll interne */
+}
+
+.close-btn {
+    float: right;
+    font-size: 24px;
+    cursor: pointer;
+    color: #aaa;
+}
+
+/* Styles du formulaire */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group input[type="text"],
+.form-group input[type="datetime-local"],
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-primary {
+    background-color: #4361ee;
+    color: white;
+}
+
+.btn-cancel {
+    background-color: #f1f1f1;
+    color: #333;
+}
 
 
 /* Responsive */
@@ -421,4 +495,145 @@ select {
     background-position: right 10px center;
     background-size: 15px;
     padding-right: 30px;
+}  
+
+/* Styles spécifiques pour la page calendrier - Version événement */
+.calendar-manager {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #3498db;
+}
+
+.calendar-title {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.calendar-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    overflow: hidden;
+    border-left: 4px solid #3498db;
+    transition: all 0.3s ease;
+}
+
+.calendar-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.calendar-color-bar {
+    height: 6px;
+    background: #3498db;
+}
+
+.calendar-card-header {
+    padding: 18px;
+    border-bottom: 1px solid #eee;
+}
+
+.calendar-card-title {
+    font-size: 1.2rem;
+    margin: 0 0 5px 0;
+    color: #2c3e50;
+}
+
+.calendar-card-body {
+    padding: 18px;
+}
+
+.calendar-card-description {
+    color: #555;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.calendar-card-footer {
+    padding: 15px;
+    background: #f9f9f9;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.calendar-badge {
+    background: #ecf0f1;
+    color: #7f8c8d;
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Onglets calendrier */
+.calendar-tabs {
+    display: flex;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #ddd;
+}
+
+.calendar-tab {
+    padding: 12px 25px;
+    cursor: pointer;
+    background: #f1f1f1;
+    margin-right: 5px;
+    border-radius: 5px 5px 0 0;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.calendar-tab.active {
+    background: #3498db;
+    color: white;
+}
+
+.calendar-tab-content {
+    display: none;
+    animation: fadeIn 0.5s ease;
+}
+
+.calendar-tab-content.active {
+    display: block;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .calendar-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .calendar-card-footer {
+        flex-direction: column;
+    }
+    
+    .calendar-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .calendar-tab {
+        flex: 1;
+        text-align: center;
+        margin-bottom: 5px;
+    }
 }

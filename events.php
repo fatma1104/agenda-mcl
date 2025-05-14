@@ -167,6 +167,7 @@ if (isset($_GET['edit'])) {
         <div class="tab active" onclick="showTab('my-events')">Mes Événements</div>
         <div class="tab" onclick="showTab('shared-with-me')">Partagés avec moi</div>
         <div class="tab" onclick="showTab('share-form')">Partager un événement</div>
+        <div class="tab" onclick="showTab('shared-by-me')">Partagés par moi</div>
     </div>
 
     <!-- Contenu des onglets -->
@@ -267,7 +268,52 @@ if (isset($_GET['edit'])) {
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
-
+    <!-- Événements que j'ai partagés -->
+<div id="shared-by-me" class="tab-content">
+    <h2><i class="fas fa-share-square"></i> Événements partagés par moi</h2>
+    <?php
+    $shared_by_me_events = $pdo->prepare("
+        SELECT e.*, u.email as recipient_email, se.access_level, c.name as calendar_name
+        FROM events e
+        JOIN shared_events se ON e.id = se.event_id
+        JOIN users u ON se.shared_with_user_id = u.id
+        JOIN calendars c ON e.calendar_id = c.id
+        WHERE se.shared_by_user_id = ?
+        ORDER BY e.start DESC
+    ");
+    $shared_by_me_events->execute([$_SESSION['user_id']]);
+    $shared_by_me_events = $shared_by_me_events->fetchAll();
+    
+    if (empty($shared_by_me_events)): ?>
+        <p>Vous n'avez partagé aucun événement</p>
+    <?php else: ?>
+        <?php foreach ($shared_by_me_events as $event): ?>
+            <div class="event-card">
+                <h3><?= htmlspecialchars($event['title']) ?></h3>
+                <p><strong>Calendrier:</strong> <?= htmlspecialchars($event['calendar_name']) ?></p>
+                <p><strong>Partagé avec:</strong> <?= htmlspecialchars($event['recipient_email']) ?></p>
+                <p><strong>Permission:</strong> <?= $event['access_level'] === 'lecture' ? 'Lecture seule' : 'Édition' ?></p>
+                <?php if (!empty($event['description'])): ?>
+                    <p><?= htmlspecialchars($event['description']) ?></p>
+                <?php endif; ?>
+                <p><strong>Début:</strong> <?= date('d/m/Y H:i', strtotime($event['start'])) ?></p>
+                <p><strong>Fin:</strong> <?= date('d/m/Y H:i', strtotime($event['end'])) ?></p>
+                <div class="event-actions">
+                    <button class="btn" onclick="openEditModal(
+                        <?= $event['id'] ?>,
+                        '<?= addslashes($event['title']) ?>',
+                        `<?= addslashes($event['description']) ?>`,
+                        '<?= date('Y-m-d\TH:i', strtotime($event['start'])) ?>',
+                        '<?= date('Y-m-d\TH:i', strtotime($event['end'])) ?>',
+                        <?= $event['calendar_id'] ?>
+                    )">
+                        <i class="fas fa-edit"></i> Modifier
+                    </button>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</div>
     <div id="share-form" class="tab-content">
         <h2>Partager un événement</h2>
         <form method="post">
@@ -355,4 +401,3 @@ if (isset($_GET['edit'])) {
     </script>
 </body>
 </html>
-

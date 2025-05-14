@@ -26,7 +26,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['error'] = $e->getMessage();
         }
     }
-    
+    // Modification d'un calendrier
+if (isset($_POST['edit_calendar'])) {
+    try {
+        $stmt = $pdo->prepare("
+            UPDATE calendars 
+            SET name = ?, color = ?, description = ?
+            WHERE id = ? AND user_id = ?
+        ");
+        $stmt->execute([
+            htmlspecialchars($_POST['name']),
+            $_POST['color'],
+            htmlspecialchars($_POST['description']),
+            $_POST['id'],
+            $_SESSION['user_id']
+        ]);
+        $_SESSION['success'] = "Calendrier mis à jour";
+    } catch (PDOException $e) {
+        $_SESSION['error'] = "Erreur: " . $e->getMessage();
+    }
+    header("Location: calendar.php");
+    exit;
+}
     // Partage d'un calendrier
     if (isset($_POST['share_calendar'])) {
         try {
@@ -98,80 +119,164 @@ $shared_calendars = $shared_calendars->fetchAll();
     
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-calendar-alt"></i> Mes Calendriers</h1>
+    <div class="calendar-manager">
+    <header class="calendar-header">
+        <h1 class="calendar-title"><i class="fas fa-calendar-alt"></i> Mes Calendriers</h1>
+        <div class="header-actions">
             <a href="dashboard.php" class="btn"><i class="fas fa-arrow-left"></i> Retour</a>
             <button class="btn btn-primary" onclick="openModal('add-calendar-modal')">
                 <i class="fas fa-plus"></i> Nouveau Calendrier
             </button>
-        </header>
+        </div>
+    </header>
 
-        <!-- Messages d'alerte -->
-        <?php if (isset($_SESSION['success'])): ?>
-            <div class="alert success">
-                <?= htmlspecialchars($_SESSION['success']) ?>
-            </div>
-            <?php unset($_SESSION['success']); ?>
-        <?php endif; ?>
-        
-        <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert error">
-                <?= htmlspecialchars($_SESSION['error']) ?>
-            </div>
-            <?php unset($_SESSION['error']); ?>
-        <?php endif; ?>
+    <!-- Messages d'alerte -->
+    <?php if (isset($_SESSION['success'])): ?>
+        <div class="alert success"><?= htmlspecialchars($_SESSION['success']) ?></div>
+        <?php unset($_SESSION['success']); ?>
+    <?php endif; ?>
+    
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="alert error"><?= htmlspecialchars($_SESSION['error']) ?></div>
+        <?php unset($_SESSION['error']); ?>
+    <?php endif; ?>
 
-        <section>
-            <h2><i class="fas fa-user"></i> Mes Calendriers</h2>
-            <div class="calendar-grid">
-                <?php foreach ($calendars as $calendar): ?>
-                    <div class="calendar-card">
-                        <div class="calendar-color" style="background: <?= $calendar['color'] ?? '#3498db' ?>;"></div>
-                        <h3><?= htmlspecialchars($calendar['name']) ?></h3>
-                        <p><?= $calendar['event_count'] ?> événement(s)</p>
-                        <?php if (!empty($calendar['description'])): ?>
-                            <p><?= htmlspecialchars($calendar['description']) ?></p>
-                        <?php endif; ?>
-                        <div class="calendar-actions">
-                            <a href="events.php?calendar_id=<?= $calendar['id'] ?>" class="btn btn-primary">
-                                <i class="fas fa-eye"></i> Voir
-                            </a>
-                            <button class="btn" onclick="openShareModal(<?= $calendar['id'] ?>)">
-                                <i class="fas fa-share-alt"></i> Partager
-                            </button>
-                            <a href="?delete=<?= $calendar['id'] ?>" class="btn btn-danger" onclick="return confirm('Supprimer ce calendrier?')">
-                                <i class="fas fa-trash"></i> Supprimer
-                            </a>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </section>
-
-        <section>
-            <h2><i class="fas fa-users"></i> Calendriers Partagés</h2>
-            <?php if (empty($shared_calendars)): ?>
-                <p>Aucun calendrier partagé avec vous</p>
-            <?php else: ?>
-                <div class="calendar-grid">
-                    <?php foreach ($shared_calendars as $calendar): ?>
-                        <div class="calendar-card">
-                         <div class="calendar-color" style="background: <?= $calendar['color'] ?? '#3498db' ?>;"></div>
-                            <h3><?= htmlspecialchars($calendar['name']) ?></h3>
-                            <p>Propriétaire: <?= htmlspecialchars($calendar['owner_email']) ?></p>
-                            <div class="calendar-actions">
-                                <a href="events.php?calendar_id=<?= $calendar['id'] ?>" class="btn btn-primary">
-                                    <i class="fas fa-eye"></i> Voir
-                                </a>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </section>
+    <!-- Onglets -->
+    <div class="calendar-tabs">
+        <div class="calendar-tab active" onclick="showCalendarTab('my-calendars')">Mes Calendriers</div>
+        <div class="calendar-tab" onclick="showCalendarTab('shared-calendars')">Partagés avec moi</div>
+        <div class="calendar-tab" onclick="showCalendarTab('shared-by-me')">Partagés par moi</div>
     </div>
 
+    <!-- Contenu des onglets -->
+    <div id="my-calendars" class="calendar-tab-content active">
+        <div class="calendar-grid">
+            <?php foreach ($calendars as $calendar): ?>
+            <div class="calendar-card">
+                <div class="calendar-color-bar" style="background: <?= $calendar['color'] ?>"></div>
+                
+                <div class="calendar-card-header">
+                    <h3 class="calendar-card-title"><?= htmlspecialchars($calendar['name']) ?></h3>
+                    <span class="calendar-badge"><?= $calendar['event_count'] ?> événement(s)</span>
+                </div>
+                
+                <div class="calendar-card-body">
+                    <?php if (!empty($calendar['description'])): ?>
+                    <p class="calendar-card-description"><?= htmlspecialchars($calendar['description']) ?></p>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="calendar-card-footer">
+                    <a href="events.php?calendar_id=<?= $calendar['id'] ?>" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> Voir
+                    </a>
+                    <button class="btn btn-warning" onclick="openEditCalendarModal(
+    <?= $calendar['id'] ?>,
+    '<?= htmlspecialchars(addslashes($calendar['name']), ENT_QUOTES) ?>',
+    '<?= $calendar['color'] ?>',
+    '<?= isset($calendar['description']) ? htmlspecialchars(addslashes($calendar['description']), ENT_QUOTES) : '' ?>'
+)">
+    <i class="fas fa-edit"></i> Modifier
+</button>
+                    <a href="?delete=<?= $calendar['id'] ?>" class="btn btn-danger" onclick="return confirm('Supprimer ce calendrier?')">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </a>
+                    <button class="btn btn-secondary" onclick="openShareModal(<?= $calendar['id'] ?>)">
+                        <i class="fas fa-share-alt"></i> Partager
+                    </button>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <div id="shared-calendars" class="calendar-tab-content">
+        <?php if (empty($shared_calendars)): ?>
+            <p>Aucun calendrier partagé avec vous</p>
+        <?php else: ?>
+            <div class="calendar-grid">
+                <?php foreach ($shared_calendars as $calendar): ?>
+                <div class="calendar-card">
+                    <div class="calendar-color-bar" style="background: <?= $calendar['color'] ?>"></div>
+                    
+                    <div class="calendar-card-header">
+                        <h3 class="calendar-card-title"><?= htmlspecialchars($calendar['name']) ?></h3>
+                        <p><small>Propriétaire: <?= htmlspecialchars($calendar['owner_email']) ?></small></p>
+                    </div>
+                    
+                    <div class="calendar-card-footer">
+                        <a href="events.php?calendar_id=<?= $calendar['id'] ?>" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> Voir
+                        </a>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <div id="shared-by-me" class="calendar-tab-content">
+        <?php if (empty($shared_by_me)): ?>
+            <p>Vous n'avez partagé aucun calendrier</p>
+        <?php else: ?>
+            <div class="calendar-grid">
+                <?php foreach ($shared_by_me as $calendar): ?>
+                <div class="calendar-card">
+                    <div class="calendar-color-bar" style="background: <?= $calendar['color'] ?>"></div>
+                    
+                    <div class="calendar-card-header">
+                        <h3 class="calendar-card-title"><?= htmlspecialchars($calendar['name']) ?></h3>
+                        <p><small>Partagé avec: <?= htmlspecialchars($calendar['recipient_email']) ?></small></p>
+                        <p><small>Permission: <?= $calendar['access_level'] === 'lecture' ? 'Lecture seule' : 'Édition' ?></small></p>
+                    </div>
+                    
+                    <div class="calendar-card-footer">
+                        <a href="events.php?calendar_id=<?= $calendar['id'] ?>" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> Voir
+                        </a>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<!-- Modal Modification Calendrier -->
+<div id="edit-calendar-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('edit-calendar-modal')">&times;</span>
+        <h2><i class="fas fa-edit"></i> Modifier Calendrier</h2>
+        <form method="post">
+            <input type="hidden" name="edit_calendar" value="1">
+            <input type="hidden" name="id" id="editCalendarId">
+            
+            <div class="form-group">
+                <label for="editCalendarName">Nom du calendrier</label>
+                <input type="text" id="editCalendarName" name="name" required class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="editCalendarColor">Couleur</label>
+                <input type="color" id="editCalendarColor" name="color" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="editCalendarDescription">Description</label>
+                <textarea id="editCalendarDescription" name="description" class="form-control" rows="3"></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('edit-calendar-modal')">
+                    Annuler
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
     <!-- Modal Ajout Calendrier -->
     <div id="add-calendar-modal" class="modal">
         <div class="modal-content">
@@ -215,7 +320,7 @@ $shared_calendars = $shared_calendars->fetchAll();
                     <label>Permission</label>
                     <select name="access_level" required>
                         <option value="lecture">Lecture seule</option>
-                        <option value="edition">lecrure+ecriture </option>
+                        <option value="edition">Édition complète</option>
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary">
