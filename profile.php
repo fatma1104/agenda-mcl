@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 </div>
             </div>
             <div class="stat-footer">
-                <a href="shared.php" class="stat-link">Voir les partages <i class="fas fa-arrow-right"></i></a>
+                <a href="calendar.php" class="stat-link">Voir les partages <i class="fas fa-arrow-right"></i></a>
             </div>
         </div>
     </div>
