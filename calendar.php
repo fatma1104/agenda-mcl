@@ -87,6 +87,16 @@ if (isset($_GET['delete'])) {
     exit;
 }
 
+$shared_by_me = $pdo->prepare("
+    SELECT c.*, u.email as recipient_email, sc.access_level
+    FROM calendars c
+    JOIN shared_calendars sc ON c.id = sc.calendar_id
+    JOIN users u ON sc.shared_with_user_id = u.id
+    WHERE c.user_id = ?
+");
+$shared_by_me->execute([$_SESSION['user_id']]);
+$shared_by_me = $shared_by_me->fetchAll();
+
 // Récupération des données
 $calendars = $pdo->prepare("
     SELECT c.*, 
@@ -167,7 +177,7 @@ $shared_calendars = $shared_calendars->fetchAll();
                 </div>
                 
                 <div class="calendar-card-footer">
-                    <a href="events.php?calendar_id=<?= $calendar['id'] ?>" class="btn btn-primary">
+                    <a href="calendar-view.php?calendar_id=<?= $calendar['id'] ?>" class="btn btn-primary">
                         <i class="fas fa-eye"></i> Voir
                     </a>
                     <button class="btn btn-warning" onclick="openEditCalendarModal(
@@ -205,7 +215,7 @@ $shared_calendars = $shared_calendars->fetchAll();
                     </div>
                     
                     <div class="calendar-card-footer">
-                        <a href="events.php?calendar_id=<?= $calendar['id'] ?>" class="btn btn-primary">
+                        <a href="calendar-view.php?calendar_id=<?= $calendar['id'] ?>" class="btn btn-primary">
                             <i class="fas fa-eye"></i> Voir
                         </a>
                     </div>
@@ -231,7 +241,7 @@ $shared_calendars = $shared_calendars->fetchAll();
                     </div>
                     
                     <div class="calendar-card-footer">
-                        <a href="events.php?calendar_id=<?= $calendar['id'] ?>" class="btn btn-primary">
+                        <a href="calendar-view.php?calendar_id=<?= $calendar['id'] ?>" class="btn btn-primary">
                             <i class="fas fa-eye"></i> Voir
                         </a>
                     </div>
